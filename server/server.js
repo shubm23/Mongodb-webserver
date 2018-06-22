@@ -5,8 +5,10 @@ const {ObjectID} = require('mongodb');
 var {mongoose} = require('./db/mongoose');
 var {Todo} = require('./models/todo');
 var {User} = require('./models/user');
-
+var port = 4000;
 var app = express();
+
+
 app.use('/todos', function (req, res, next) {
   console.log('Request Type:', req.method)
   next()
@@ -90,9 +92,25 @@ app.patch('/todos/:id',(req,res)=>{
     res.status(400).send();
   });
 });
+//Authentication
 
-app.listen(4000, () => {
-  console.log('Started on port 4000');
+app.post('/login',(req,res)=>{
+    var body = _.pick(req.body,['email','password']);
+    var user = new User(body);
+
+    user.save().then(()=>{
+      return user.generateAuthToken();
+    }).then((token) => {
+      console.log(token);
+      res.header('x-auth', token).send(user);
+    }).catch((e)=>{
+      res.status(400).send(e);
+    })
+});
+
+//Listen Port
+app.listen(port, () => {
+  console.log(`Started on port ${port}`);
 });
 
 module.exports ={app};
